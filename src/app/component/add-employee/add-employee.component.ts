@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import { Component, Inject, OnInit } from '@angular/core'
 import { MatCardModule } from '@angular/material/card'
 import {
   FormControl,
@@ -15,7 +15,8 @@ import { provideNativeDateAdapter } from '@angular/material/core'
 import { MatIconModule } from '@angular/material/icon'
 import { Employee } from '../../model/Employee'
 import { EmployeeService } from '../../services/employee.service'
-import { MatDialogRef } from '@angular/material/dialog'
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog'
+import { ToastrService } from 'ngx-toastr'
 
 @Component({
   selector: 'app-add-employee',
@@ -33,12 +34,7 @@ import { MatDialogRef } from '@angular/material/dialog'
   styleUrl: './add-employee.component.scss',
   providers: [provideNativeDateAdapter()],
 })
-export class AddEmployeeComponent {
-  constructor(
-    private service: EmployeeService,
-    private ref: MatDialogRef<AddEmployeeComponent>,
-  ) {}
-
+export class AddEmployeeComponent implements OnInit {
   public title = 'Add Employee'
   public empForm = new FormGroup({
     id: new FormControl(0),
@@ -47,6 +43,35 @@ export class AddEmployeeComponent {
     role: new FormControl('', Validators.required),
     salary: new FormControl(0, Validators.required),
   })
+  public dialogData: any
+  private isEdit = false
+
+  constructor(
+    private service: EmployeeService,
+    private ref: MatDialogRef<AddEmployeeComponent>,
+    private toastr: ToastrService,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+  ) {}
+
+  ngOnInit() {
+    this.dialogData = this.data
+    if (this.dialogData.code > 0) {
+      this.title = 'Edit Employee'
+      this.isEdit = true
+      this.service.get(this.dialogData.code).subscribe(e => {
+        let _data = e
+        if (_data != null) {
+          this.empForm.setValue({
+            id: _data.id,
+            name: _data.name,
+            doj: _data.doj,
+            role: _data.role,
+            salary: _data.salary,
+          })
+        }
+      })
+    }
+  }
 
   public saveEmployee() {
     if (this.empForm.valid) {
@@ -58,10 +83,17 @@ export class AddEmployeeComponent {
         salary: this.empForm.value.salary as number,
       }
 
-      this.service.create(_data).subscribe(i => {
-        alert('Employee Added Successfully')
-        this.closePopup()
-      })
+      if (this.isEdit) {
+        this.service.update(_data).subscribe(i => {
+          this.toastr.success('Employee Added Successfully', 'Updated')
+          this.closePopup()
+        })
+      } else {
+        this.service.create(_data).subscribe(i => {
+          this.toastr.success('Employee Added Successfully', 'Created')
+          this.closePopup()
+        })
+      }
     }
   }
 
