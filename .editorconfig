@@ -1,17 +1,25 @@
-# Editor configuration, see https://editorconfig.org
 root = true
 
 [*]
-charset = utf-8
 indent_style = space
 indent_size = 2
-insert_final_newline = true
+end_of_line = lf
+charset = utf-8
 trim_trailing_whitespace = true
+insert_final_newline = true
 
-[*.ts]
+[*.{js,jsx,ts,tsx}]
 quote_type = single
-ij_typescript_use_double_quotes = false
+arrow_parens = avoid
+bracket_spacing = true
+jsx_quote_type = single
+jsx_bracket_same_line = false
+semi = false
+trailing_comma = all
+
+[*.html]
+html_whitespace_sensitivity = css
 
 [*.md]
-max_line_length = off
+prose_wrap = always
 trim_trailing_whitespace = false
